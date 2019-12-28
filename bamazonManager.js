@@ -26,6 +26,7 @@ var connection = mysql.createConnection({
 //-------------------
 // FUNCTIONS
 //-------------------
+// C - create/change products
 
 // R - read products
 function readProducts(){
@@ -71,6 +72,8 @@ function updateProducts(product, userOrder){
         }
     );
 }
+
+// D - delete products
 
 // order products as a customer
 function orderProducts(allProducts){
