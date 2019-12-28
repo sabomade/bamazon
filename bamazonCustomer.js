@@ -49,14 +49,14 @@ function readProducts(){
         //print table to screen
         console.log(t.toString());
 
-        //end connection
-        //connection.end();
+        //call order products
+        orderProducts(res);
     });
 }
 
 // U - update products
 function updateProducts(product, userOrder){
-    console.log("Updating ", product[0].product_name, "...\n");
+    console.log("\nUpdating ", product[0].product_name, "...\n");
     connection.query(
         "UPDATE products SET ? WHERE ?",
         [
@@ -68,7 +68,7 @@ function updateProducts(product, userOrder){
             }
         ], function(err, res){
             if(err) throw err;
-            console.log(res.affectedRows + " products updated!\n");
+            console.log("\n"+res.affectedRows + " products updated!\n");
         }
     );
 }
@@ -76,25 +76,32 @@ function updateProducts(product, userOrder){
 // D - delete products
 
 // order products as a customer
-function orderProducts(){
+function orderProducts(allProducts){
     // get user input, check input against database, update database if necessary
     inquirer.prompt([
         {
-            type: "input",
-            name: "id",
-            message: "What is the item_id of the product you'd like to purchase?"
+            type: "rawlist",
+            name: "choice",
+            choices: function(){
+                var choiceArray = [];
+                for (let index = 0; index < allProducts.length; index++) {
+                    choiceArray.push(allProducts[index].product_name);
+                }
+                return choiceArray;
+            },
+            message: "Which product would you like to purchase?"
         },
         {
             type: "input",
             name: "quantityToPurchase",
-            message: "How many do you want to purchase?"
+            message: "How many of this item do you wish to purchase?"
         },
     ]).then(function(item){
         var userOrder = parseInt(item.quantityToPurchase);
         connection.query(
             "SELECT * FROM products WHERE ?",
             {   
-                item_id: item.id,
+                product_name: item.choice,
             },
             function(err, product){
                 //console.log(product);
@@ -106,16 +113,15 @@ function orderProducts(){
                     //console log total cost for customer
                     const totalCost = product[0].price * parseInt(item.quantityToPurchase);
                     //console.log("totalCost:", totalCost)
-                    console.log("Your purchase of", product[0].product_name, "was successful. Your total cost is", totalCost);
+                    console.log("Your purchase of", product[0].product_name, "was successful. Your total cost is $"+totalCost);
                 }
                 else{
                     console.log("Insufficient Quantity")
                 }
-                //connection.end();
+                connection.end();
             }
         );
     })
-
 }
 
 
@@ -129,7 +135,5 @@ connection.connect(function(err){
     
     //display all products
     readProducts();
-    
-    //get customer order
-    orderProducts();
+
 });
