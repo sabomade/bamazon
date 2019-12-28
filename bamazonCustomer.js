@@ -3,6 +3,7 @@
 //-------------------
 var mysql = require("mysql");
 var inquirer = require("inquirer");
+var Table = require('easy-table');
 
 //-------------------
 // DATABASE SETUP
@@ -33,35 +34,49 @@ function readProducts(){
     connection.query("SELECT item_id, product_name, price FROM products",
     function(err, res){
         if (err) throw err;
-        //console.log(res);
-        console.log ("-------------------------------");
-        console.log("| item_id |", " product_name ", "| price |");
-        console.log ("-------------------------------");
-        Object.keys(res).forEach(function(key) {
-            var row = res[key];
-            console.log("| ",row.item_id, "| ", row.product_name, "| ",row.price,"|");
+       // console.log(res);
+
+        //create table to display all products
+        var t = new Table;
+
+        //add each product to table
+        res.forEach(product => {
+            t.cell("Item ID", product.item_id);
+            t.cell("Product Name", product.product_name);
+            t.cell("Price, USD", product.price, Table.number(2));
+            t.newRow();
         });
-        console.log ("-------------------------------");
+        //print table to screen
+        console.log(t.toString());
+
+        //end connection
         //connection.end();
     });
 }
 
 // U - update products
+function updateProducts(product, userOrder){
+    console.log("Updating ", product[0].product_name, "...\n");
+    connection.query(
+        "UPDATE products SET ? WHERE ?",
+        [
+            {
+                stock_quantity: product[0].stock_quantity - userOrder
+            },
+            {
+                item_id: product[0].item_id
+            }
+        ], function(err, res){
+            if(err) throw err;
+            console.log(res.affectedRows + " products updated!\n");
+        }
+    );
+}
 
 // D - delete products
 
-
-//-------------------
-// MAIN PROCESS
-//-------------------
-connection.connect(function(err){
-    if (err) throw err;
-    //a connection was made to database
-    console.log("connected as id " + connection.threadId + "\n");
-    
-    //display all products
-    readProducts();
-
+// order products as a customer
+function orderProducts(){
     // get user input, check input against database, update database if necessary
     inquirer.prompt([
         {
@@ -75,6 +90,7 @@ connection.connect(function(err){
             message: "How many do you want to purchase?"
         },
     ]).then(function(item){
+        var userOrder = parseInt(item.quantityToPurchase);
         connection.query(
             "SELECT * FROM products WHERE ?",
             {   
@@ -83,21 +99,37 @@ connection.connect(function(err){
             function(err, product){
                 //console.log(product);
                 if(err){ throw err;}
-                else if (parseInt(item.quantityToPurchase) <= product[0].stock_quantity){
+                else if (userOrder <= product[0].stock_quantity){
                     //update database
+                    updateProducts(product, userOrder);
 
                     //console log total cost for customer
                     const totalCost = product[0].price * parseInt(item.quantityToPurchase);
-                    console.log("totalCost:", totalCost)
+                    //console.log("totalCost:", totalCost)
                     console.log("Your purchase of", product[0].product_name, "was successful. Your total cost is", totalCost);
                 }
                 else{
                     console.log("Insufficient Quantity")
-                    connection.end();
                 }
-                
+                //connection.end();
             }
         );
     })
+
+}
+
+
+//-------------------
+// MAIN PROCESS
+//-------------------
+connection.connect(function(err){
+    if (err) throw err;
+    //a connection was made to database
+    console.log("connected as id " + connection.threadId + "\n");
     
-})
+    //display all products
+    readProducts();
+    
+    //get customer order
+    orderProducts();
+});
