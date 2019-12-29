@@ -27,11 +27,46 @@ var connection = mysql.createConnection({
 // FUNCTIONS
 //-------------------
 // C - create/change products
+function addProduct(){
+    console.log("Let's add a new product...\n");
+    inquirer.prompt([
+        {
+            type:"input",
+            name: "product_name",
+            message: "What is the name of the product you're adding?"       
+        },
+        {
+            type: "input",
+            name: "department_name",
+            message:"To which department does this new product belong?"
+        },
+        {
+            type: "input",
+            name: "price",
+            message:"How much does this new product cost?"
+        },
+        {
+            type: "input",
+            name: "stock_quantity",
+            message:"How much of this new product is in stock?"
+        }
+    ]).then(function(newProd){
+        var sql = "INSERT INTO products (product_name, department_name, price, stock_quantity) VALUES ?";
+        var values=[
+            [newProd.product_name, newProd.department_name, newProd.price, newProd.stock_quantity]
+        ];
+        connection.query(sql, [values],function(err, res){
+                if(err) throw err;
+                console.log("\n"+res.affectedRows + " products added!\n");
+            }
+        );
+    });
+}
 
 // R - read products
 function readProducts(){
     console.log("Displaying all products...\n");
-    connection.query("SELECT item_id, product_name, price FROM products",
+    connection.query("SELECT item_id, product_name, price, stock_quantity FROM products",
     function(err, res){
         if (err) throw err;
        // console.log(res);
@@ -44,86 +79,127 @@ function readProducts(){
             t.cell("Item ID", product.item_id);
             t.cell("Product Name", product.product_name);
             t.cell("Price, USD", product.price, Table.number(2));
+            t.cell("Quantity in Stock", product.stock_quantity);
             t.newRow();
         });
         //print table to screen
         console.log(t.toString());
+    });
+}
 
-        //call order products
-        orderProducts(res);
+// R - View Low Inventory
+function viewLowInventory(){
+    console.log("Displaying all products with less than 5 items in stock...\n");
+    connection.query("SELECT item_id, product_name, price, stock_quantity FROM products",
+    function(err, res){
+        if (err) throw err;
+       // console.log(res);
+       var lowStock = [];
+       res.forEach(element => {
+           if (element.stock_quantity <= 5){
+               lowStock.push(element);
+           }
+       });
+
+       if (lowStock.length === 0){
+           console.log("No inventory Stock under 5 items");
+       } else{
+            //create table to display all products
+            var t2 = new Table;
+
+            //add each product to table
+            lowStock.forEach(product => {
+                t2.cell("Item ID", product.item_id);
+                t2.cell("Product Name", product.product_name);
+                t2.cell("Price, USD", product.price, Table.number(2));
+                t2.cell("Quantity in Stock", product.stock_quantity);
+                t2.newRow();
+            });
+            //print table to screen
+            console.log(t2.toString());
+       }
     });
 }
 
 // U - update products
-function updateProducts(product, userOrder){
-    console.log("\nUpdating ", product[0].product_name, "...\n");
+function updateInventory(){
+    console.log("Let's update a product...\n");
     connection.query(
-        "UPDATE products SET ? WHERE ?",
-        [
+        "SELECT * FROM products", function(err, res){
+        // update database based on user input
+        inquirer.prompt([
             {
-                stock_quantity: product[0].stock_quantity - userOrder
+                type: "rawlist",
+                name: "choice",
+                choices: function(){
+                    var choiceArray = [];
+                    for (let index = 0; index < res.length; index++) {
+                        choiceArray.push(res[index].product_name);
+                    }
+                    return choiceArray;
+                },
+                message: "Which product would you like to modify?"
             },
             {
-                item_id: product[0].item_id
-            }
-        ], function(err, res){
-            if(err) throw err;
-            console.log("\n"+res.affectedRows + " products updated!\n");
-        }
-    );
+                type: "input",
+                name: "quantity",
+                message: "Quantity to Add?"
+            },
+        ]).then(function(item){
+            var stock = parseInt(item.quantity);
+            connection.query(
+                "SELECT * FROM products WHERE ?",
+                [
+                    {
+                        product_name: item.choice,
+                    }
+                ], function(err, res){
+                    if (err) throw err;
+                    var currentStock = res[0].stock_quantity;
+                    // console.log(res);
+                    // console.log("currentStock", currentStock);
+                    connection.query(
+                        "UPDATE products SET ? WHERE ?",
+                        [
+                            {
+                                stock_quantity:stock+currentStock,
+                            },
+                            {   
+                                product_name: item.choice,
+                            },
+                        ], function(err, res2){
+                            if(err) throw err;
+                            console.log("\n"+res2.affectedRows + " products updated!\n");
+                        }
+                    );
+                }
+            )
+        });
+    });
 }
-
 // D - delete products
 
-// order products as a customer
-function orderProducts(allProducts){
-    // get user input, check input against database, update database if necessary
-    inquirer.prompt([
-        {
-            type: "rawlist",
-            name: "choice",
-            choices: function(){
-                var choiceArray = [];
-                for (let index = 0; index < allProducts.length; index++) {
-                    choiceArray.push(allProducts[index].product_name);
-                }
-                return choiceArray;
-            },
-            message: "Which product would you like to purchase?"
-        },
-        {
-            type: "input",
-            name: "quantityToPurchase",
-            message: "How many of this item do you wish to purchase?"
-        },
-    ]).then(function(item){
-        var userOrder = parseInt(item.quantityToPurchase);
-        connection.query(
-            "SELECT * FROM products WHERE ?",
-            {   
-                product_name: item.choice,
-            },
-            function(err, product){
-                //console.log(product);
-                if(err){ throw err;}
-                else if (userOrder <= product[0].stock_quantity){
-                    //update database
-                    updateProducts(product, userOrder);
-
-                    //console log total cost for customer
-                    const totalCost = product[0].price * parseInt(item.quantityToPurchase);
-                    //console.log("totalCost:", totalCost)
-                    console.log("Your purchase of", product[0].product_name, "was successful. Your total cost is $"+totalCost);
-                }
-                else{
-                    console.log("Insufficient Quantity")
-                }
-                connection.end();
-            }
-        );
-    })
+// ask manager what task to perform upon start of program
+function start(){
+    inquirer.prompt({
+        name: "option",
+        type: "list",
+        message: "What would you like to do?",
+        choices:["View Products for Sale", "View Low Inventory", "Add to Inventory", "Add New Product", "EXIT"]
+    }).then(function(answer){
+        if(answer.option === "View Products for Sale"){
+            readProducts();
+        }else if(answer.option === "View Low Inventory"){
+            viewLowInventory();
+        }else if(answer.option === "Add to Inventory"){
+            updateInventory();
+        }else if(answer.option === "Add New Product"){
+            addProduct();
+        }else if(answer.option === "EXIT"){
+            connection.end();
+        }
+    });
 }
-
 
 //-------------------
 // MAIN PROCESS
@@ -133,7 +209,6 @@ connection.connect(function(err){
     //a connection was made to database
     console.log("connected as id " + connection.threadId + "\n");
     
-    //display all products
-    readProducts();
-
+    //start
+    start();
 });
