@@ -26,7 +26,7 @@ var connection = mysql.createConnection({
 //-------------------
 // FUNCTIONS
 //-------------------
-// C - create/change products
+// C - create new products
 function addProduct(){
     console.log("Let's add a new product...\n");
     inquirer.prompt([
@@ -58,6 +58,7 @@ function addProduct(){
         connection.query(sql, [values],function(err, res){
                 if(err) throw err;
                 console.log("\n"+res.affectedRows + " products added!\n");
+                readProducts();
             }
         );
     });
@@ -84,6 +85,7 @@ function readProducts(){
         });
         //print table to screen
         console.log(t.toString());
+        connection.end();
     });
 }
 
@@ -117,6 +119,7 @@ function viewLowInventory(){
             });
             //print table to screen
             console.log(t2.toString());
+            connection.end();
        }
     });
 }
@@ -170,6 +173,7 @@ function updateInventory(){
                         ], function(err, res2){
                             if(err) throw err;
                             console.log("\n"+res2.affectedRows + " products updated!\n");
+                            readProducts();
                         }
                     );
                 }
