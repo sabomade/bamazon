@@ -56,16 +56,17 @@ function readProducts(){
 // U - update products
 function updateProducts(product, userOrder){
     console.log("\nUpdating ", product[0].product_name, "...\n");
-    connection.query(
-        "UPDATE products SET ? WHERE ?",
-        [
-            {
-                stock_quantity: product[0].stock_quantity - userOrder
-            },
-            {
-                item_id: product[0].item_id
-            }
-        ], function(err, res){
+    //console.log(product);
+    var sql = `UPDATE products 
+               SET stock_quantity = ?, product_sales = ?
+               WHERE item_id = ?`;
+    var quant = product[0].stock_quantity - userOrder;
+    //console.log(quant);
+    var sales = product[0].price * userOrder;
+    //console.log(sales);
+   // console.log(product[0].item_id);
+   var data = [quant, sales, product[0].item_id];
+    connection.query(sql, data, function(err, res){
             if(err) throw err;
             console.log("\n"+res.affectedRows + " products updated!\n");
         }
