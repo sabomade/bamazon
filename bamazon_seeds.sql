@@ -12,4 +12,11 @@ VALUES ("camera","electronics",499.99,20),
     ("shampoo","health and beauty",5.00,30),
     ("clue","games and toys",25.00,14);
 
+INSERT INTO departments (department_name, over_head_costs)
+VALUES ("electronics",10000),
+	("food",15000),
+	("crafts",3000);
+    
 SELECT * FROM products;
+
+SELECT * FROM departments;
