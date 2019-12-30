@@ -44,7 +44,7 @@ function addDepartment(){
                 }
             ],function(err, res){
                 if(err) throw err;
-                console.log("\n"+res.affectedRows + " products added!\n");
+                console.log("\n"+res.affectedRows + " department added!\n");
                 connection.end();
             }
         );
