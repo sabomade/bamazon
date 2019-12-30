@@ -30,6 +30,7 @@ var connection = mysql.createConnection({
 function addProduct(){
     console.log("Let's add a new product...\n");
     connection.query("SELECT d.department_name FROM departments AS d", function(err, res){
+        if (err) throw err;
         inquirer.prompt([
             {
                 type:"input",
