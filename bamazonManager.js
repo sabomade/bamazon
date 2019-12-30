@@ -29,38 +29,48 @@ var connection = mysql.createConnection({
 // C - create new products
 function addProduct(){
     console.log("Let's add a new product...\n");
-    inquirer.prompt([
-        {
-            type:"input",
-            name: "product_name",
-            message: "What is the name of the product you're adding?"       
-        },
-        {
-            type: "input",
-            name: "department_name",
-            message:"To which department does this new product belong?"
-        },
-        {
-            type: "input",
-            name: "price",
-            message:"How much does this new product cost?"
-        },
-        {
-            type: "input",
-            name: "stock_quantity",
-            message:"How much of this new product is in stock?"
-        }
-    ]).then(function(newProd){
-        var sql = "INSERT INTO products (product_name, department_name, price, stock_quantity) VALUES ?";
-        var values=[
-            [newProd.product_name, newProd.department_name, newProd.price, newProd.stock_quantity]
-        ];
-        connection.query(sql, [values],function(err, res){
-                if(err) throw err;
-                console.log("\n"+res.affectedRows + " products added!\n");
-                readProducts();
+    connection.query("SELECT d.department_name FROM departments AS d", function(err, res){
+        inquirer.prompt([
+            {
+                type:"input",
+                name: "product_name",
+                message: "What is the name of the product you're adding?"       
+            },
+            {
+                
+                type: "rawlist",
+                name: "department_name",
+                choices: function(){
+                    var choiceArray = [];
+                    for (let index = 0; index < res.length; index++) {
+                        choiceArray.push(res[index].department_name);
+                    }
+                    return choiceArray;
+                },
+                message:"To which department does this new product belong?"
+            },
+            {
+                type: "input",
+                name: "price",
+                message:"How much does this new product cost?"
+            },
+            {
+                type: "input",
+                name: "stock_quantity",
+                message:"How much of this new product is in stock?"
             }
-        );
+        ]).then(function(newProd){
+            var sql = "INSERT INTO products (product_name, department_name, price, stock_quantity) VALUES ?";
+            var values=[
+                [newProd.product_name, newProd.department_name, newProd.price, newProd.stock_quantity]
+            ];
+            connection.query(sql, [values],function(err, res){
+                    if(err) throw err;
+                    console.log("\n"+res.affectedRows + " products added!\n");
+                    readProducts();
+                }
+            );
+        });
     });
 }
 
@@ -119,8 +129,8 @@ function viewLowInventory(){
             });
             //print table to screen
             console.log(t2.toString());
-            connection.end();
        }
+       connection.end();
     });
 }
 
