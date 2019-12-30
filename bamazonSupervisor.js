@@ -36,13 +36,9 @@ function addDepartment(){
             message: "What is the name of the department you're adding?"       
         }
     ]).then(function(newDept){
-        connection.query(
-            "INSERT INTO departments (department_name) VALUES (?)", 
-            [
-                {
-                    department_name: newDept.department_name,
-                }
-            ],function(err, res){
+        var stmt = `INSERT INTO departments (department_name) VALUES (?)`;
+        var val = newDept.department_name;
+        connection.query(stmt, [val],function(err, res){
                 if(err) throw err;
                 console.log("\n"+res.affectedRows + " department added!\n");
                 connection.end();
