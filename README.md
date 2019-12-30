@@ -4,7 +4,7 @@ An Amazon-like storefront with MySQL. The app will take in orders from customers
 (gif coming soon...)
 
 ### How to Run
-This app is employed using node in the terminal. Download all files, open in terminal and type any of the following commands to run:
+This app is employed using a localhost MySQL server and node in the terminal. Make sure you are connecting to localhost:3307. Start server, download all files, open in terminal and type any of the following commands to run:
 `node bamazonCustomer.js`
 `node bamazonManager.js`
 `node bamazonSupervisor.js`
