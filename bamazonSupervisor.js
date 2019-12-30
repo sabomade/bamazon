@@ -45,34 +45,39 @@ function addDepartment(){
             ],function(err, res){
                 if(err) throw err;
                 console.log("\n"+res.affectedRows + " products added!\n");
+                connection.end();
             }
         );
     });
 }
 
 // R - View Product Sales by Department
-function viewProductSales(department){
-    console.log("Displaying all products in "+ department +" Department...\n");
-    // connection.query("SELECT item_id, product_name, price, stock_quantity, product_sales FROM products",
-    // function(err, res){
-    //     if (err) throw err;
-    //    // console.log(res);
+function viewProductSales(){
+    console.log("Displaying all sales by department...\n");
+    connection.query(`SELECT d.department_id, d.department_name, d.over_head_costs, SUM(p.product_sales) AS product_sales, (SUM(p.product_sales)-d.over_head_costs) AS total_profit
+    FROM departments AS d 
+    LEFT JOIN products AS p ON d.department_name=p.department_name
+    GROUP BY d.department_id`,
+    function(err, res){
+        if (err) throw err;
+        //console.log(res);
 
-    //     //create table to display all products
-    //     var t = new Table;
+        //create table to display all products
+        var t = new Table;
 
-    //     //add each product to table
-    //     res.forEach(product => {
-    //         t.cell("Item ID", product.item_id);
-    //         t.cell("Product Name", product.product_name);
-    //         t.cell("Price, USD", product.price, Table.number(2));
-    //         t.cell("Quantity in Stock", product.stock_quantity);
-    //         t.newRow();
-    //     });
-    //     //print table to screen
-    //     console.log(t.toString());
-    //     connection.end();
-    // });
+        //add each item to table
+        res.forEach(item => {
+            t.cell("Department ID", item.department_id);
+            t.cell("Department Name", item.department_name);
+            t.cell("Over Head Costs", item.over_head_costs, Table.number(2));
+            t.cell("Product Sales", item.product_sales, Table.number(2));
+            t.cell("Total Profit", item.total_profit, Table.number(2));
+            t.newRow();
+        });
+        //print table to screen
+        console.log(t.toString());
+        connection.end();
+    });
 }
 
 // ask manager what task to perform upon start of program
@@ -84,7 +89,7 @@ function start(){
         choices:["View Product Sales by Department", "Create New Department", "EXIT"]
     }).then(function(answer){
         if(answer.option === "View Product Sales by Department"){
-            viewProductSales(answer.option);
+            viewProductSales();
         }else if(answer.option === "Create New Department"){
             addDepartment();
         }else if(answer.option === "EXIT"){

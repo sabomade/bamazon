@@ -21,7 +21,3 @@ CREATE TABLE departments (
 );
 
 ALTER TABLE products ADD column product_sales decimal(10,2) NOT NULL default 0 AFTER price;
-
-SELECT * FROM products;
-
-SELECT * FROM departments;
