@@ -3,11 +3,11 @@ An Amazon-like storefront with MySQL. The app will take in orders from customers
 
 ### Demos 
 `node bamazonCustomer.js` lets the Customer select a product and quanity to buy.
-![bamazonCustomer demo](demos/bamazonCustomer1.gif)
+![bamazonCustomer demo](demos/bamazonCustomer.gif)
 If the quantity chosen is available, the app will complete the purchase and display total cost.  The app then updates the product's stock & total sales quantities in the MYSQL database.  If quantity chosen is not available, the app displays a message to customer that the stock is not available.
 
 `node bamazonManager.js` lets the Manager do several different tasks: view products for sale, view low inventory, add inventory, and add a new product.
-![bamazonManager demo](demos/bamazonManager1.gif)
+![bamazonManager demo](demos/bamazonManager.gif)
 **view products for sale** displays a list of all products in the database, their price, and quantity in stock
 **view low inventory** displays a list of all products with less than 5 quantity in stock
 **add inventory** lets the Manager choose an item and add to it's stock
