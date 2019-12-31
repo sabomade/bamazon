@@ -41,7 +41,9 @@ function addDepartment(){
         connection.query(stmt, [val],function(err, res){
                 if(err) throw err;
                 console.log("\n"+res.affectedRows + " department added!\n");
-                connection.end();
+                
+                //call start()
+                start();
             }
         );
     });
@@ -72,7 +74,9 @@ function viewProductSales(){
         });
         //print table to screen
         console.log(t.toString());
-        connection.end();
+        
+        //call start()
+        start();
     });
 }
 
