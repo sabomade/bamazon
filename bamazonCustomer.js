@@ -48,8 +48,9 @@ function readProducts(){
         //print table to screen
         console.log(t.toString());
 
-        //call order products
-        orderProducts(res);
+        //call start()
+        start()
+
     });
 }
 
@@ -69,8 +70,8 @@ function updateProducts(product, userOrder){
     connection.query(sql, data, function(err, res){
             if(err) throw err;
             console.log("\n"+res.affectedRows + " products updated!\n");
-        }
-    );
+    });
+    return true;
 }
 
 // order products as a customer
@@ -106,20 +107,46 @@ function orderProducts(allProducts){
                 if(err){ throw err;}
                 else if (userOrder <= product[0].stock_quantity){
                     //update database
-                    updateProducts(product, userOrder);
+                    var bool = updateProducts(product, userOrder);
 
                     //console log total cost for customer
                     const totalCost = product[0].price * parseInt(item.quantityToPurchase);
                     //console.log("totalCost:", totalCost)
                     console.log("Your purchase of", product[0].product_name, "was successful. Your total cost is $"+totalCost);
+
+                    if(bool) {
+                        setTimeout(start, 1000);
+                    }
                 }
                 else{
                     console.log("Insufficient Quantity")
+                    start();
                 }
-                connection.end();
             }
         );
     })
+}
+
+// ask customer what task to perform upon start of program
+function start(){
+    inquirer.prompt({
+        name: "option",
+        type: "list",
+        message: "What would you like to do?",
+        choices:["View Products for Sale", "Buy a Product for Sale", "EXIT"]
+    }).then(function(answer){
+        if(answer.option === "View Products for Sale"){
+            readProducts();
+        }else if(answer.option === "Buy a Product for Sale"){
+            connection.query("SELECT item_id, product_name, price FROM products",
+                function(err, res){
+                    if (err) throw err;
+                    orderProducts(res);
+                });
+        }else if(answer.option === "EXIT"){
+            connection.end();
+        }
+    });
 }
 
 
@@ -131,7 +158,7 @@ connection.connect(function(err){
     //a connection was made to database
     console.log("connected as id " + connection.threadId + "\n");
     
-    //display all products
-    readProducts();
+    //start the program
+    start();
 
 });

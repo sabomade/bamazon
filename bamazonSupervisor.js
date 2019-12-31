@@ -76,7 +76,7 @@ function viewProductSales(){
     });
 }
 
-// ask manager what task to perform upon start of program
+// ask Supervisor what task to perform upon start of program
 function start(){
     inquirer.prompt({
         name: "option",
