@@ -96,7 +96,9 @@ function readProducts(){
         });
         //print table to screen
         console.log(t.toString());
-        connection.end();
+        
+        //call start()
+        start()
     });
 }
 
@@ -115,7 +117,9 @@ function viewLowInventory(){
        });
 
        if (lowStock.length === 0){
-           console.log("No inventory Stock under 5 items");
+            console.log("No stock quantities under 5 items");
+            //call start()
+            start();
        } else{
             //create table to display all products
             var t2 = new Table;
@@ -130,8 +134,10 @@ function viewLowInventory(){
             });
             //print table to screen
             console.log(t2.toString());
+
+            //call start()
+            start();
        }
-       connection.end();
     });
 }
 
